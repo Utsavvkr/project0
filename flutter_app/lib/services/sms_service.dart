@@ -36,6 +36,11 @@ class SMSService {
   }
 
   Future<void> requestPermissionsAndStartListening() async {
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    await androidImplementation?.requestNotificationsPermission();
+
     final bool? result = await telephony.requestPhoneAndSmsPermissions;
     if (result != null && result) {
       telephony.listenIncomingSms(
@@ -107,10 +112,15 @@ class SMSService {
   }
 
   Map<String, dynamic>? parseSMSText(String body, String sender) {
-    // Basic verification: does it contain debit keywords?
+    // Basic verification: does it contain debit/paid keywords?
     final cleanBody = body.toLowerCase();
     if (!cleanBody.contains("debited") && 
+        !cleanBody.contains("debit") && 
         !cleanBody.contains("spent") && 
+        !cleanBody.contains("paid") && 
+        !cleanBody.contains("sent") && 
+        !cleanBody.contains("payment") && 
+        !cleanBody.contains("transfer") && 
         !cleanBody.contains("txn of") && 
         !cleanBody.contains("charged")) {
       return null;
@@ -130,7 +140,7 @@ class SMSService {
     else if (senderUpper.contains("PAYTM")) bank = "Paytm Bank";
 
     // Extract amount
-    final amtMatch = RegExp(r"(?:rs\.?|inr|amt\.?)\s*([0-9,]+(?:\.[0-9]{2})?)", caseSensitive: false).firstMatch(body);
+    final amtMatch = RegExp(r"(?:rs\.?|inr|amt\.?|₹|amount)\s*([0-9,]+(?:\.[0-9]{2})?)", caseSensitive: false).firstMatch(body);
     if (amtMatch != null) {
       amount = double.tryParse(amtMatch.group(1)!.replaceAll(",", "")) ?? 0.0;
     }

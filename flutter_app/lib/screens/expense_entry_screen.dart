@@ -40,6 +40,40 @@ class _ExpenseEntryScreenState extends State<ExpenseEntryScreen> {
     }
   }
 
+  String _matchCategory(String text) {
+    final lower = text.toLowerCase();
+    if (lower.contains('sugar') || lower.contains('salt') || lower.contains('milk') ||
+        lower.contains('rice') || lower.contains('tea') || lower.contains('bread') ||
+        lower.contains('flour') || lower.contains('atta') || lower.contains('dal') ||
+        lower.contains('oil') || lower.contains('paneer') || lower.contains('curd') ||
+        lower.contains('vegetable') || lower.contains('fruit') || lower.contains('grocery') ||
+        lower.contains('groceries') || lower.contains('dmart') || lower.contains('ration')) {
+      return 'Groceries';
+    } else if (lower.contains('coffee') || lower.contains('cappuccino') || lower.contains('latte') || lower.contains('starbucks')) {
+      return 'Coffee';
+    } else if (lower.contains('zomato') || lower.contains('swiggy') || lower.contains('pizza') ||
+               lower.contains('burger') || lower.contains('restaurant') || lower.contains('food') ||
+               lower.contains('dinner') || lower.contains('lunch') || lower.contains('breakfast')) {
+      return 'Food & Dining';
+    } else if (lower.contains('uber') || lower.contains('ola') || lower.contains('rapido') ||
+               lower.contains('petrol') || lower.contains('fuel') || lower.contains('metro') ||
+               lower.contains('cab') || lower.contains('auto')) {
+      return 'Transport';
+    } else if (lower.contains('phone') || lower.contains('laptop') || lower.contains('electronics') ||
+               lower.contains('charger') || lower.contains('earbud') || lower.contains('mobile')) {
+      return 'Electronics';
+    } else if (lower.contains('friend') || lower.contains('dost')) {
+      return 'sent money to friend';
+    } else if (lower.contains('family') || lower.contains('mom') || lower.contains('dad')) {
+      return 'sent money to family';
+    } else if (lower.contains('amazon') || lower.contains('flipkart') || lower.contains('myntra') || lower.contains('cloth')) {
+      return 'Shopping';
+    } else if (lower.contains('recharge') || lower.contains('bill') || lower.contains('electricity') || lower.contains('wifi')) {
+      return 'Utilities';
+    }
+    return 'Miscellaneous';
+  }
+
   Future<void> _saveExpense() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -70,14 +104,32 @@ class _ExpenseEntryScreenState extends State<ExpenseEntryScreen> {
       }
     }
 
-    // Fallback if no items entered or API failed
+    // Instant smart offline fallback if online API wasn't available
+    if (parsedItems.isEmpty && itemsText.isNotEmpty) {
+      final lines = itemsText.split(RegExp(r'[\n,]')).map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+      final pricePerItem = lines.isNotEmpty ? amount / lines.length : amount;
+      for (var line in lines) {
+        final cat = _matchCategory(line);
+        final capitalized = line[0].toUpperCase() + (line.length > 1 ? line.substring(1) : '');
+        parsedItems.add(ExpenseItem(
+          itemName: capitalized,
+          category: cat,
+          subcategory: 'General',
+          estimatedPrice: pricePerItem,
+          source: widget.prefilledTxn?.smsSource ?? 'Manual',
+        ));
+      }
+    }
+
+    // Fallback if no items entered at all
     if (parsedItems.isEmpty) {
+      final cat = _matchCategory(merchant);
       parsedItems.add(ExpenseItem(
-        itemName: 'General Purchase',
-        category: 'Miscellaneous',
+        itemName: merchant.isNotEmpty ? merchant : 'General Purchase',
+        category: cat,
         subcategory: 'General',
         estimatedPrice: amount,
-        source: 'Manual',
+        source: widget.prefilledTxn?.smsSource ?? 'Manual',
       ));
     }
 
