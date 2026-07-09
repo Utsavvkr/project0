@@ -5,7 +5,7 @@ class AppColors {
 }
 
 class TransactionRecord {
-  final int? id;
+  int? id;
   final double amount;
   final String merchant;
   final String paymentMode;
