@@ -42,6 +42,10 @@ jobs:
         working-directory: ./flutter_app
         run: flutter pub get
 
+      - name: Patch AGP 8 namespace for telephony plugin
+        run: |
+          find ~/.pub-cache/hosted/pub.dev/telephony*/android -name "build.gradle" -exec sed -i '/android {/a \    namespace "com.shounakmulay.telephony"' {} +
+
       - name: Build Android APK
         working-directory: ./flutter_app
         run: flutter build apk --release --no-shrink
