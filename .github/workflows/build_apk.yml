@@ -28,6 +28,10 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
+      - name: Generate Native Android Scaffolding
+        working-directory: ./flutter_app
+        run: flutter create --platforms android --org com.expenseiq.app .
+
       - name: Install dependencies
         working-directory: ./flutter_app
         run: flutter pub get
