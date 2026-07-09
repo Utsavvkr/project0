@@ -32,13 +32,19 @@ jobs:
         working-directory: ./flutter_app
         run: flutter create --platforms android --org com.expenseiq.app .
 
+      - name: Enable AndroidX & Jetifier for telephony plugin
+        working-directory: ./flutter_app
+        run: |
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+
       - name: Install dependencies
         working-directory: ./flutter_app
         run: flutter pub get
 
       - name: Build Android APK
         working-directory: ./flutter_app
-        run: flutter build apk --release
+        run: flutter build apk --release --no-shrink
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
