@@ -28,9 +28,12 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
-      - name: Generate Native Android Scaffolding
+      - name: Generate Native Android Scaffolding & Configure SDK 23
         working-directory: ./flutter_app
-        run: flutter create --platforms android --org com.expenseiq.app .
+        run: |
+          flutter create --platforms android --org com.expenseiq.app .
+          sed -i 's/minSdkVersion .*/minSdkVersion 23/' android/app/build.gradle
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
 
       - name: Enable AndroidX & Jetifier for telephony plugin
         working-directory: ./flutter_app
