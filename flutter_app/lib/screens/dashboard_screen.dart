@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models.dart';
 import '../services/db_helper.dart';
 import 'expense_entry_screen.dart';
+import '../services/sms_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,6 +24,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadDashboardData();
+  }
+
+  Future<void> _runSMSInboxScan() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Scanning SMS Inbox for transactions...')),
+    );
+    final count = await SMSService.instance.scanInboxSMS();
+    await _loadDashboardData();
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('SMS Scan Complete'),
+          content: Text('Found and imported $count bank/UPI transactions from your SMS inbox!'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK', style: TextStyle(color: AppColors.emerald)),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _testPopupNotification() async {
+    await SMSService.instance.simulateTestSMS();
+    await _loadDashboardData();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sent Test SMS Alert! Check top notification banner.')),
+      );
+    }
   }
 
   Future<void> _loadDashboardData() async {
@@ -137,6 +171,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _buildMetricCard('Weekly', '₹${_weekTotal.toStringAsFixed(0)}'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Quick Action Scan & Test Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E293B),
+                              foregroundColor: const Color(0xFF10B981),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(color: Color(0xFF10B981), width: 1),
+                              ),
+                            ),
+                            icon: const Icon(Icons.sms_outlined, size: 18),
+                            label: const Text('Scan SMS Inbox', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            onPressed: _runSMSInboxScan,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E293B),
+                              foregroundColor: const Color(0xFF10B981),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(color: Color(0xFF10B981), width: 1),
+                              ),
+                            ),
+                            icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                            label: const Text('Test SMS Alert', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            onPressed: _testPopupNotification,
+                          ),
                         ),
                       ],
                     ),

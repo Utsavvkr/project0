@@ -140,9 +140,16 @@ class SMSService {
     else if (senderUpper.contains("PAYTM")) bank = "Paytm Bank";
 
     // Extract amount
-    final amtMatch = RegExp(r"(?:rs\.?|inr|amt\.?|₹|amount)\s*([0-9,]+(?:\.[0-9]{2})?)", caseSensitive: false).firstMatch(body);
+    final amtMatch = RegExp(r"(?:rs\.?|inr|amt\.?|₹|amount)\s*([0-9,]+(?:\.[0-9]{1,2})?)", caseSensitive: false).firstMatch(body);
     if (amtMatch != null) {
       amount = double.tryParse(amtMatch.group(1)!.replaceAll(",", "")) ?? 0.0;
+    }
+
+    if (amount <= 0.0) {
+      final fallbackMatch = RegExp(r"(?:paid|sent|debited|spent|for)\s*(?:rs\.?|inr|₹)?\s*([0-9]+(?:\.[0-9]{1,2})?)", caseSensitive: false).firstMatch(body);
+      if (fallbackMatch != null) {
+        amount = double.tryParse(fallbackMatch.group(1)!.replaceAll(",", "")) ?? 0.0;
+      }
     }
 
     // Extract merchant
@@ -174,5 +181,51 @@ class SMSService {
       'date': dateStr,
       'time': timeStr,
     };
+  }
+
+  Future<int> scanInboxSMS() async {
+    final bool? granted = await telephony.requestPhoneAndSmsPermissions;
+    if (granted == null || !granted) return 0;
+
+    final List<SmsMessage> messages = await telephony.getInboxSms(
+      columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
+    );
+
+    int count = 0;
+    for (var msg in messages.take(200)) {
+      final body = msg.body ?? '';
+      final sender = msg.address ?? 'BANK';
+      final parsed = parseSMSText(body, sender);
+      if (parsed != null && parsed['amount'] != null && (parsed['amount'] as double) > 0) {
+        final now = DateTime.now();
+        final txn = TransactionRecord(
+          amount: parsed['amount'],
+          merchant: parsed['merchant'],
+          paymentMode: parsed['payment_mode'],
+          bank: parsed['bank'],
+          date: parsed['date'],
+          time: parsed['time'],
+          smsSource: sender,
+          createdAt: now.toIso8601String(),
+        );
+
+        final defaultItem = ExpenseItem(
+          itemName: parsed['merchant'],
+          category: "Miscellaneous",
+          subcategory: "General",
+          estimatedPrice: parsed['amount'],
+          source: "SMS Scan",
+        );
+
+        await DBHelper.instance.insertTransaction(txn, [defaultItem]);
+        count++;
+      }
+    }
+    return count;
+  }
+
+  Future<void> simulateTestSMS() async {
+    const testSMS = "Rs. 450.00 debited from HDFC Bank A/c XX1234 on 09-Jul-26 to DMART GROCERIES via UPI.";
+    await processIncomingSMS(testSMS, "VK-HDFCBK");
   }
 }
