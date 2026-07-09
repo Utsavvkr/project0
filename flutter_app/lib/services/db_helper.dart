@@ -189,12 +189,19 @@ class DBHelper {
       final category = row['category'] as String;
       final spent = (row['spent'] as num?)?.toDouble() ?? 0.0;
 
-      await db.update(
+      final rowsUpdated = await db.update(
         'budgets',
         {'spent_amount': spent},
         where: 'category = ?',
         whereArgs: [category]
       );
+      if (rowsUpdated == 0) {
+        await db.insert('budgets', {
+          'category': category,
+          'amount_limit': 5000.0,
+          'spent_amount': spent,
+        });
+      }
     }
   }
 
