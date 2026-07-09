@@ -26,8 +26,8 @@ class ExpenseIQApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.emerald,
-          primary: Colors.emerald,
+          seedColor: const Color(0xFF10B981),
+          primary: const Color(0xFF10B981),
           brightness: Brightness.dark,
           background: const Color(0xFF0F172A), // Slate 900
           surface: const Color(0xFF1E293B), // Slate 800
@@ -83,7 +83,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.emerald,
+        selectedItemColor: const Color(0xFF10B981),
         unselectedItemColor: Colors.grey,
         backgroundColor: const Color(0xFF1E293B),
         items: const [

@@ -112,7 +112,7 @@ class _ExpenseEntryScreenState extends State<ExpenseEntryScreen> {
           ? const Center(child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(color: Colors.emerald),
+                CircularProgressIndicator(color: AppColors.emerald),
                 SizedBox(height: 16),
                 Text('AI categorizing purchase items...'),
               ],
@@ -195,7 +195,7 @@ class _ExpenseEntryScreenState extends State<ExpenseEntryScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.emerald,
+                      backgroundColor: AppColors.emerald,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.all(16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

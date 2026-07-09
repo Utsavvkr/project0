@@ -1,3 +1,9 @@
+import 'package:flutter/material.dart';
+
+class AppColors {
+  static const Color emerald = Color(0xFF10B981);
+}
+
 class TransactionRecord {
   final int? id;
   final double amount;

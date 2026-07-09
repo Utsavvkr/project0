@@ -62,7 +62,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 labelText: 'Search e.g. groceries in June',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.search, color: Colors.emerald),
+                  icon: const Icon(Icons.search, color: Color(0xFF10B981)),
                   onPressed: _performSearch,
                 ),
               ),
@@ -71,7 +71,7 @@ class _SearchScreenState extends State<SearchScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.emerald))
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
                   : _searchResults.isEmpty
                       ? const Center(child: Text('No matching transactions found.', style: TextStyle(color: Colors.grey)))
                       : ListView.builder(
@@ -83,7 +83,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               margin: const EdgeInsets.only(bottom: 10),
                               child: ListTile(
                                 leading: const CircleAvatar(
-                                  backgroundColor: Colors.emerald,
+                                  backgroundColor: Color(0xFF10B981),
                                   child: Icon(Icons.shopping_bag, color: Colors.white),
                                 ),
                                 title: Text(tx.merchant, style: const TextStyle(fontWeight: FontWeight.bold)),

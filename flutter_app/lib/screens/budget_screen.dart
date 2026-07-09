@@ -64,14 +64,14 @@ class _BudgetScreenState extends State<BudgetScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Category Budgets')),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.emerald))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
           : ListView.builder(
               padding: const EdgeInsets.all(16.0),
               itemCount: _budgets.length,
               itemBuilder: (context, index) {
                 final b = _budgets[index];
                 final pct = b.amountLimit > 0 ? b.spentAmount / b.amountLimit : 0.0;
-                Color statusColor = Colors.emerald;
+                Color statusColor = const Color(0xFF10B981);
                 if (pct >= 1.0) statusColor = Colors.red;
                 else if (pct >= 0.75) statusColor = Colors.amber;
 
@@ -87,7 +87,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           children: [
                             Text(b.category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                             IconButton(
-                              icon: const Icon(Icons.edit, size: 18, color: Colors.emerald),
+                              icon: const Icon(Icons.edit, size: 18, color: Color(0xFF10B981)),
                               onPressed: () => _editLimit(b),
                             ),
                           ],

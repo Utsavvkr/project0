@@ -42,7 +42,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget build(BuildContext context) {
     List<PieChartSectionData> chartSections = [];
     int colorIdx = 0;
-    final List<Color> colors = [Colors.emerald, Colors.blue, Colors.orange, Colors.red, Colors.purple, Colors.teal, Colors.grey];
+    final List<Color> colors = [const Color(0xFF10B981), Colors.blue, Colors.orange, Colors.red, Colors.purple, Colors.teal, Colors.grey];
 
     _categoryTotals.forEach((category, total) {
       if (total > 0) {
@@ -60,7 +60,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Reports & Analytics')),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.emerald))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF10B981)))
           : _categoryTotals.isEmpty
               ? const Center(child: Text('No spending data to display.'))
               : SingleChildScrollView(
@@ -88,7 +88,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(e.key, style: const TextStyle(fontWeight: FontWeight.w600)),
-                                Text('₹${e.value.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.emerald)),
+                                Text('₹${e.value.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
                               ],
                             ),
                           )),

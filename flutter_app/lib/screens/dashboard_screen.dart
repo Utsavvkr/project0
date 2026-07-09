@@ -83,7 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.emerald))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.emerald))
           : RefreshIndicator(
               onRefresh: _loadDashboardData,
               child: SingleChildScrollView(
@@ -98,14 +98,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Colors.emerald, Color(0xFF047857)],
+                          colors: [AppColors.emerald, Color(0xFF047857)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.emerald.withOpacity(0.3),
+                            color: AppColors.emerald.withOpacity(0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           )
@@ -170,8 +170,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.emerald.withOpacity(0.1),
-                              child: const Icon(Icons.shopping_cart, color: Colors.emerald),
+                              backgroundColor: AppColors.emerald.withOpacity(0.1),
+                              child: const Icon(Icons.shopping_cart, color: AppColors.emerald),
                             ),
                             title: Text(tx.merchant, style: const TextStyle(fontWeight: FontWeight.bold)),
                             subtitle: Text('${tx.paymentMode} • ${tx.date}'),
@@ -194,7 +194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.emerald,
+        backgroundColor: AppColors.emerald,
         child: const Icon(Icons.add, color: Colors.white),
         onPressed: () async {
           await Navigator.push(
@@ -226,7 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildBudgetProgress(CategoryBudget b) {
     final double pct = b.amountLimit > 0 ? b.spentAmount / b.amountLimit : 0.0;
-    Color progressColor = Colors.emerald;
+    Color progressColor = AppColors.emerald;
     if (pct >= 1.0) {
       progressColor = Colors.red;
     } else if (pct >= 0.75) {
