@@ -32,7 +32,10 @@ jobs:
         working-directory: ./flutter_app
         run: |
           flutter create --platforms android --org com.expenseiq.app .
-          sed -i 's/minSdkVersion .*/minSdkVersion 23/' android/app/build.gradle
+          echo "flutter.minSdkVersion=23" >> android/local.properties
+          sed -i 's/minSdk = .*/minSdk = 23/g' android/app/build.gradle
+          sed -i 's/minSdk .*/minSdk = 23/g' android/app/build.gradle
+          sed -i 's/minSdkVersion .*/minSdkVersion 23/g' android/app/build.gradle
           sed -i '/<manifest/a \    <uses-permission android:name="android.permission.READ_SMS"/>\n    <uses-permission android:name="android.permission.RECEIVE_SMS"/>\n    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
 
       - name: Enable AndroidX & Jetifier for telephony plugin
