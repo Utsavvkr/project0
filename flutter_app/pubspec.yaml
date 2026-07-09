@@ -14,7 +14,7 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.8.3
   telephony: ^0.2.0
-  flutter_local_notifications: ^16.1.0
+  flutter_local_notifications: ^17.2.3
   fl_chart: ^0.66.0
   intl: ^0.18.1
   shared_preferences: ^2.2.1

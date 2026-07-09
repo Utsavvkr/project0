@@ -42,9 +42,10 @@ jobs:
         working-directory: ./flutter_app
         run: flutter pub get
 
-      - name: Patch AGP 8 namespace for telephony plugin
+      - name: Patch plugin compatibility for Android 14 / AGP 8
         run: |
           find ~/.pub-cache/hosted/pub.dev/telephony*/android -name "build.gradle" -exec sed -i '/android {/a \    namespace "com.shounakmulay.telephony"' {} +
+          find ~/.pub-cache/hosted/pub.dev/flutter_local_notifications* -name "*.java" -exec sed -i 's/bigPictureStyle.bigLargeIcon(null)/bigPictureStyle.bigLargeIcon((android.graphics.Bitmap) null)/g' {} +
 
       - name: Build Android APK
         working-directory: ./flutter_app
