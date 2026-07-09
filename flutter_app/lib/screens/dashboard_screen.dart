@@ -24,6 +24,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadDashboardData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoCatchUpSMS();
+    });
+  }
+
+  Future<void> _autoCatchUpSMS() async {
+    final newTxns = await SMSService.instance.autoCatchUpSMSOnStartup();
+    if (newTxns.isNotEmpty && mounted) {
+      await _loadDashboardData();
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          title: Row(
+            children: [
+              const Icon(Icons.mark_email_unread, color: AppColors.emerald),
+              const SizedBox(width: 8),
+              Expanded(child: Text('${newTxns.length} New Payment SMS Found!', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('We detected new payments since you last opened the app:', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                const SizedBox(height: 12),
+                ...newTxns.map((tx) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const CircleAvatar(backgroundColor: Color(0xFF0F172A), child: Icon(Icons.payment, color: AppColors.emerald)),
+                  title: Text(tx.merchant, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  subtitle: Text('${tx.paymentMode} • ${tx.date}', style: const TextStyle(color: Colors.grey)),
+                  trailing: Text('₹${tx.amount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald, fontSize: 15)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => ExpenseEntryScreen(prefilledTxn: tx))).then((_) => _loadDashboardData());
+                  },
+                )),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Dismiss', style: TextStyle(color: Colors.grey)),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _runSMSInboxScan() async {

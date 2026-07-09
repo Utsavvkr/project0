@@ -4,10 +4,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models.dart';
 import 'db_helper.dart';
 
-// Background message handler must be a top-level function
-void onBackgroundMessage(SmsMessage message) {
+// Background message handler must be a top-level function annotated for background isolates
+@pragma('vm:entry-point')
+void onBackgroundMessage(SmsMessage message) async {
   log("Background SMS Received: ${message.body}");
-  SMSService.instance.processIncomingSMS(message.body ?? '', message.address ?? 'BANK');
+  await SMSService.instance.initNotifications();
+  await SMSService.instance.processIncomingSMS(message.body ?? '', message.address ?? 'BANK');
 }
 
 class SMSService {
@@ -183,6 +185,15 @@ class SMSService {
     };
   }
 
+  Future<bool> _isDuplicateTransaction(double amount, String merchant, String date) async {
+    final existing = await DBHelper.instance.getTransactions();
+    return existing.any((tx) =>
+      (tx.amount - amount).abs() < 0.01 &&
+      tx.merchant.toUpperCase() == merchant.toUpperCase() &&
+      tx.date == date
+    );
+  }
+
   Future<int> scanInboxSMS() async {
     final bool? granted = await telephony.requestPhoneAndSmsPermissions;
     if (granted == null || !granted) return 0;
@@ -197,31 +208,87 @@ class SMSService {
       final sender = msg.address ?? 'BANK';
       final parsed = parseSMSText(body, sender);
       if (parsed != null && parsed['amount'] != null && (parsed['amount'] as double) > 0) {
-        final now = DateTime.now();
-        final txn = TransactionRecord(
-          amount: parsed['amount'],
-          merchant: parsed['merchant'],
-          paymentMode: parsed['payment_mode'],
-          bank: parsed['bank'],
-          date: parsed['date'],
-          time: parsed['time'],
-          smsSource: sender,
-          createdAt: now.toIso8601String(),
-        );
+        final amt = parsed['amount'] as double;
+        final merch = parsed['merchant'] as String;
+        final date = parsed['date'] as String;
 
-        final defaultItem = ExpenseItem(
-          itemName: parsed['merchant'],
-          category: "Miscellaneous",
-          subcategory: "General",
-          estimatedPrice: parsed['amount'],
-          source: "SMS Scan",
-        );
+        final isDup = await _isDuplicateTransaction(amt, merch, date);
+        if (!isDup) {
+          final now = DateTime.now();
+          final txn = TransactionRecord(
+            amount: amt,
+            merchant: merch,
+            paymentMode: parsed['payment_mode'],
+            bank: parsed['bank'],
+            date: date,
+            time: parsed['time'],
+            smsSource: sender,
+            createdAt: now.toIso8601String(),
+          );
 
-        await DBHelper.instance.insertTransaction(txn, [defaultItem]);
-        count++;
+          final defaultItem = ExpenseItem(
+            itemName: merch,
+            category: "Miscellaneous",
+            subcategory: "General",
+            estimatedPrice: amt,
+            source: "SMS Scan",
+          );
+
+          await DBHelper.instance.insertTransaction(txn, [defaultItem]);
+          count++;
+        }
       }
     }
     return count;
+  }
+
+  Future<List<TransactionRecord>> autoCatchUpSMSOnStartup() async {
+    final bool? granted = await telephony.requestPhoneAndSmsPermissions;
+    if (granted == null || !granted) return [];
+
+    final List<SmsMessage> messages = await telephony.getInboxSms(
+      columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
+    );
+
+    List<TransactionRecord> newTxns = [];
+    for (var msg in messages.take(30)) {
+      final body = msg.body ?? '';
+      final sender = msg.address ?? 'BANK';
+      final parsed = parseSMSText(body, sender);
+      if (parsed != null && parsed['amount'] != null && (parsed['amount'] as double) > 0) {
+        final amt = parsed['amount'] as double;
+        final merch = parsed['merchant'] as String;
+        final date = parsed['date'] as String;
+
+        final isDup = await _isDuplicateTransaction(amt, merch, date);
+        if (!isDup) {
+          final now = DateTime.now();
+          final txn = TransactionRecord(
+            amount: amt,
+            merchant: merch,
+            paymentMode: parsed['payment_mode'],
+            bank: parsed['bank'],
+            date: date,
+            time: parsed['time'],
+            smsSource: sender,
+            createdAt: now.toIso8601String(),
+          );
+
+          final defaultItem = ExpenseItem(
+            itemName: merch,
+            category: "Miscellaneous",
+            subcategory: "General",
+            estimatedPrice: amt,
+            source: "SMS Scan",
+          );
+
+          final insertedId = await DBHelper.instance.insertTransaction(txn, [defaultItem]);
+          txn.id = insertedId;
+          newTxns.add(txn);
+        }
+      }
+    }
+    return newTxns;
   }
 
   Future<void> simulateTestSMS() async {
