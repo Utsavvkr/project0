@@ -1,0 +1,3 @@
+@echo off
+echo Starting Cloudflare Tunnel (HTTP2 TCP mode) for ExpenseIQ Web Simulator...
+npx -y cloudflared tunnel --protocol http2 --url http://localhost:8000

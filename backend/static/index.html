@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseIQ - AI-Powered Expense Simulator</title>
+    
+    <!-- Premium Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- ChartJS for Beautiful Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --emerald-50: #ecfdf5;
+            --emerald-100: #d1fae5;
+            --emerald-500: #10b981;
+            --emerald-600: #059669;
+            --emerald-700: #047857;
+            --emerald-900: #064e3b;
+            
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            
+            --phone-width: 370px;
+            --phone-height: 720px;
+        }
+
+        [data-theme="light"] {
+            --bg-dark: #f8fafc;
+            --card-dark: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        /* Sleek Dark Emerald Scrollbars for All Elements */
+        *::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        *::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 10px;
+        }
+        *::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.35);
+            border-radius: 10px;
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.6);
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 30px 20px 60px 20px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Layout Grid */
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--phone-width) 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: start;
+            margin: 0 auto;
+        }
+
+        /* --- LEFT SIDE: SIMULATED ANDROID PHONE --- */
+        .phone-frame {
+            width: var(--phone-width);
+            height: 660px;
+            background-color: #000000;
+            border: 14px solid #1e293b;
+            border-radius: 44px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(16, 185, 129, 0.25);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* Phone Camera Notch */
+        .phone-notch {
+            width: 120px;
+            height: 25px;
+            background-color: #22252a;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 18px;
+            z-index: 100;
+        }
+
+        /* Phone Screen Area */
+        .phone-screen {
+            flex: 1;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-top: 36px; /* space for status bar */
+            overflow: hidden;
+        }
+
+        /* Phone Status Bar */
+        .status-bar {
+            height: 24px;
+            padding: 0 26px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            position: absolute;
+            top: 10px;
+            left: 0;
+            right: 0;
+            z-index: 90;
+        }
+
+        .status-icons i {
+            margin-left: 4px;
+        }
+
+        /* Push Notification Banner */
+        .push-notification {
+            position: absolute;
+            top: -240px; /* hidden by default */
+            left: 10px;
+            right: 10px;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid var(--emerald-500);
+            border-radius: 20px;
+            padding: 14px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #ffffff;
+        }
+
+        .push-notification.active {
+            top: 40px;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--emerald-500);
+            margin-bottom: 6px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .notification-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notification-body {
+            font-size: 12px;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-notification {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-notification.primary {
+            background-color: var(--emerald-500);
+            color: #ffffff;
+        }
+
+        .btn-notification.secondary {
+            background-color: #334155;
+            color: #ffffff;
+        }
+
+        /* Screen Header */
+        .screen-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .screen-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .screen-title span {
+            color: var(--emerald-500);
+        }
+
+        /* Screen Scrollable Body */
+        .screen-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 20px;
+            padding-bottom: 65px; /* space for bottom nav */
+            display: none;
+        }
+
+        .screen-content.active {
+            display: block;
+        }
+
+        /* Bottom Nav Bar */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background-color: var(--card-dark);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 80;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            flex: 1;
+            height: 100%;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            margin-bottom: 4px;
+            transition: transform 0.2s;
+        }
+
+        .nav-item:hover i {
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            color: var(--emerald-500);
+        }
+
+        /* Dashboard Metrics */
+        .metric-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background-color: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .metric-card.full-width {
+            grid-column: span 2;
+            background: linear-gradient(135deg, var(--emerald-900), var(--emerald-600));
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card.full-width::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .metric-card.full-width .metric-label {
+            color: var(--emerald-100);
+        }
+
+        .metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .metric-card.full-width .metric-value {
+            font-size: 26px;
+        }
+
+        /* Section Headings */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0 10px 0;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-action {
+            font-size: 12px;
+            color: var(--emerald-500);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Budget Progress Indicator */
+        .budget-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .budget-item {
+            background-color: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+
+        .budget-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .budget-progress-bar {
+            height: 6px;
+            background-color: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .budget-progress {
+            height: 100%;
+            background-color: var(--emerald-500);
+            width: 0%;
+            transition: width 0.8s ease-in-out, background-color 0.4s;
+        }
+
+        .budget-progress.warning {
+            background-color: #f59e0b; /* Yellow */
+        }
+
+        .budget-progress.danger {
+            background-color: #ef4444; /* Red */
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Expense List */
+        .expense-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .expense-item-row {
+            background-color: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expense-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .expense-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--emerald-500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .expense-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .expense-merchant {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .expense-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .expense-item-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .expense-amount {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .expense-delete {
+            color: #ef4444;
+            font-size: 11px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .expense-delete:hover {
+            opacity: 1;
+        }
+
+        /* Form Inputs (Expense Entry / Budgets / Settings) */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .form-control {
+            width: 100%;
+            background-color: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--emerald-500);
+        }
+
+        textarea.form-control {
+            resize: none;
+            height: 90px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--emerald-500);
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--emerald-600);
+        }
+
+        /* Floating Add Button */
+        .fab-add {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--emerald-500);
+            color: #ffffff;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 75;
+            transition: transform 0.2s;
+        }
+
+        .fab-add:hover {
+            transform: scale(1.05);
+        }
+
+        /* Chart Canvas Box */
+        .chart-box {
+            background-color: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        /* Search Results container */
+        .search-results {
+            margin-top: 15px;
+        }
+
+        /* Dynamic Insights list */
+        .insights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .insight-card {
+            background-color: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .insight-icon {
+            color: var(--emerald-500);
+            font-size: 16px;
+        }
+
+        /* Settings Option lists */
+        .settings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 14px;
+        }
+
+        .settings-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .settings-info i {
+            color: var(--emerald-500);
+        }
+
+        /* --- RIGHT SIDE: SIMULATOR CONTROL PANEL --- */
+        .control-panel {
+            background-color: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-self: start;
+        }
+
+        .control-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--emerald-500);
+            border-bottom: 1px solid #374151;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-card {
+            background-color: #1f2937;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #374151;
+        }
+
+        .control-section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sms-samples {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 160px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding-right: 6px;
+            padding-bottom: 4px;
+        }
+
+        .sms-sample-item {
+            background-color: #111827;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        .sms-sample-item:hover {
+            border-color: var(--emerald-500);
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        .console-logs {
+            background-color: #030712;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            height: 140px;
+            overflow-y: auto;
+            color: #34d399;
+            border: 1px solid #1f2937;
+        }
+
+        .console-log-entry {
+            margin-bottom: 6px;
+            white-space: pre-wrap;
+            border-bottom: 1px solid rgba(52, 211, 153, 0.1);
+            padding-bottom: 4px;
+        }
+
+        .btn-control {
+            background-color: var(--emerald-500);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-control:hover {
+            background-color: var(--emerald-600);
+        }
+        
+        .pill-badge {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--emerald-500);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 950px) {
+            body {
+                padding: 15px 10px;
+            }
+            .app-container {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                gap: 24px;
+            }
+            .phone-frame {
+                width: min(370px, 95vw);
+                height: min(720px, 88vh);
+            }
+            .control-panel {
+                width: min(500px, 95vw);
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- LEFT PANEL: SIMULATED ANDROID PHONE -->
+    <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+            
+            <!-- Android Status Bar -->
+            <div class="status-bar">
+                <span id="phone-clock">19:00</span>
+                <div class="status-icons">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+            </div>
+
+            <!-- SMS Transaction Notification Popdown -->
+            <div class="push-notification" id="sms-popdown">
+                <div class="notification-header">
+                    <span id="notif-bank">BANK ALERT</span>
+                    <span>Just Now</span>
+                </div>
+                <div class="notification-title" id="notif-title">₹850 Spent at DMART</div>
+                <div class="notification-body">What did you buy? Add items to categorize your expense.</div>
+                <div class="notification-actions">
+                    <button class="btn-notification primary" onclick="handleNotifAction('add')">Add Items</button>
+                    <button class="btn-notification secondary" onclick="handleNotifAction('skip')">Skip</button>
+                </div>
+            </div>
+
+            <!-- APP HEADER -->
+            <div class="screen-header">
+                <div class="screen-title" id="app-header-title">Expense<span>IQ</span></div>
+                <div class="pill-badge" id="screen-badge">Home</div>
+            </div>
+
+            <!-- Floating Action Button (Quick Add) -->
+            <div class="fab-add" onclick="showScreen('entry')">
+                <i class="fas fa-plus"></i>
+            </div>
+
+            <!-- SCREEN 1: DASHBOARD -->
+            <div class="screen-content active" id="screen-dashboard">
+                <div class="metric-cards">
+                    <div class="metric-card full-width">
+                        <div class="metric-label">This Month's Spending</div>
+                        <div class="metric-value" id="dash-month-total">₹0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Today's Spend</div>
+                        <div class="metric-value" id="dash-today-total">₹0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Weekly Spend</div>
+                        <div class="metric-value" id="dash-week-total">₹0</div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <span class="section-title">Category Budgets</span>
+                    <span class="section-action" onclick="showScreen('budgets')">Edit</span>
+                </div>
+                <div class="budget-list" id="dash-budgets">
+                    <!-- Budgets loaded dynamically -->
+                </div>
+
+                <div class="section-header">
+                    <span class="section-title">Recent Transactions</span>
+                    <span class="section-action" onclick="loadTransactions()">Refresh</span>
+                </div>
+                <div class="expense-list" id="dash-transactions">
+                    <!-- Transactions loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- SCREEN 2: EXPENSE ENTRY -->
+            <div class="screen-content" id="screen-entry">
+                <div class="section-title" style="margin-bottom:15px;" id="entry-form-title">New Transaction</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Merchant Name</label>
+                    <input type="text" id="form-merchant" class="form-control" placeholder="e.g. DMART">
+                </div>
+                
+                <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" id="form-amount" class="form-control" placeholder="850">
+                    </div>
+                    <div>
+                        <label class="form-label">Payment Mode</label>
+                        <select id="form-payment" class="form-control">
+                            <option value="UPI">UPI</option>
+                            <option value="Card">Card</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Wallet">Wallet</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label class="form-label">Bank Name</label>
+                        <input type="text" id="form-bank" class="form-control" placeholder="HDFC">
+                    </div>
+                    <div>
+                        <label class="form-label">Date</label>
+                        <input type="date" id="form-date" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">What did you buy? (AI Parser)</label>
+                    <textarea id="form-items" class="form-control" placeholder="Enter one item per line. e.g.&#10;Tea&#10;Sugar&#10;Rice&#10;Soap"></textarea>
+                </div>
+
+                <button class="btn-submit" onclick="submitTransaction()">
+                    <i class="fas fa-check-circle"></i> Save Expense
+                </button>
+            </div>
+
+            <!-- SCREEN 3: REPORTS -->
+            <div class="screen-content" id="screen-reports">
+                <div class="chart-box">
+                    <div class="chart-title">Category Distribution</div>
+                    <canvas id="categoryChart" style="max-height: 180px;"></canvas>
+                </div>
+
+                <div class="chart-box">
+                    <div class="chart-title">Payment Mode (UPI vs Cash/Card)</div>
+                    <canvas id="paymentChart" style="max-height: 180px;"></canvas>
+                </div>
+
+                <div class="chart-box">
+                    <div class="chart-title">6-Month Spending Trend</div>
+                    <canvas id="trendChart" style="max-height: 180px;"></canvas>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: SEARCH -->
+            <div class="screen-content" id="screen-search">
+                <div class="form-group">
+                    <label class="form-label">Natural Language Search</label>
+                    <div style="position:relative;">
+                        <input type="text" id="search-input" class="form-control" placeholder="e.g. groceries in June or Amazon > 500" style="padding-right: 40px;" onkeypress="handleSearchKeyPress(event)">
+                        <i class="fas fa-search" style="position:absolute; right:15px; top:12px; color:var(--text-muted); cursor:pointer;" onclick="executeSearch()"></i>
+                    </div>
+                </div>
+
+                <div class="section-title">Query Results</div>
+                <div class="expense-list search-results" id="search-results-list">
+                    <div style="text-align:center; padding:40px 0; color:var(--text-muted); font-size:12px;">
+                        <i class="fas fa-terminal" style="font-size:24px; margin-bottom:10px; display:block;"></i>
+                        Enter a natural query above to search.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: INSIGHTS & STATS -->
+            <div class="screen-content" id="screen-insights">
+                <div class="section-title" style="margin-bottom:12px;">AI Assistant Observations</div>
+                <div class="insights-list" id="insights-list-box">
+                    <!-- Loaded dynamically -->
+                </div>
+
+                <div class="section-title" style="margin-top:20px; margin-bottom:12px;">General Statistics</div>
+                <div class="budget-list" id="stats-list-box">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- SCREEN 6: BUDGETS MANAGER -->
+            <div class="screen-content" id="screen-budgets-manager">
+                <div class="section-title" style="margin-bottom:15px;">Manage Budget Limits</div>
+                <div style="max-height: 380px; overflow-y: auto; padding-right: 4px;" id="budget-edit-list">
+                    <!-- Budgets limits settings -->
+                </div>
+            </div>
+
+            <!-- SCREEN 7: PROFILE & SETTINGS -->
+            <div class="screen-content" id="screen-settings">
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <i class="fas fa-coins"></i>
+                            <span>Currency</span>
+                        </div>
+                        <select id="sett-currency" class="form-control" style="width: 80px;" onchange="updateSetting('currency', this.value)">
+                            <option value="₹">₹ (INR)</option>
+                            <option value="$">$ (USD)</option>
+                            <option value="€">€ (EUR)</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <i class="fas fa-palette"></i>
+                            <span>Theme</span>
+                        </div>
+                        <button class="btn-notification secondary" onclick="toggleTheme()" style="width: 80px;">Dark/Light</button>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <i class="fas fa-key"></i>
+                            <span>Gemini API Key</span>
+                        </div>
+                        <input type="password" id="sett-api-key" class="form-control" style="width: 150px;" placeholder="Add API key" onchange="updateSetting('gemini_api_key', this.value)">
+                    </div>
+
+                    <div class="settings-item" style="cursor:pointer;" onclick="exportData()">
+                        <div class="settings-info">
+                            <i class="fas fa-file-export"></i>
+                            <span>Export Transactions</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:var(--text-muted)"></i>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <i class="fas fa-robot"></i>
+                            <span>Mock OCR Scanner</span>
+                        </div>
+                        <input type="checkbox" id="sett-ocr" onchange="updateSetting('ocr_mock_enabled', this.checked ? 'true' : 'false')">
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM NAVIGATION BAR -->
+            <div class="bottom-nav">
+                <div class="nav-item active" id="nav-home" onclick="showScreen('dashboard')">
+                    <i class="fas fa-house"></i>Home
+                </div>
+                <div class="nav-item" id="nav-reports" onclick="showScreen('reports')">
+                    <i class="fas fa-chart-pie"></i>Reports
+                </div>
+                <div class="nav-item" id="nav-search" onclick="showScreen('search')">
+                    <i class="fas fa-search"></i>Search
+                </div>
+                <div class="nav-item" id="nav-insights" onclick="showScreen('insights')">
+                    <i class="fas fa-lightbulb"></i>AI Insights
+                </div>
+                <div class="nav-item" id="nav-settings" onclick="showScreen('settings')">
+                    <i class="fas fa-gear"></i>Settings
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: SIMULATOR CONTROL CONSOLE -->
+    <div class="control-panel">
+        <div class="control-title">
+            <i class="fas fa-sliders"></i> Simulator Control Center
+        </div>
+
+        <!-- SMS trigger -->
+        <div class="control-section">
+            <div class="control-section-title">
+                <i class="fas fa-sms"></i> Incoming SMS Simulator
+            </div>
+            <div class="sms-samples" id="sms-presets">
+                <!-- Preset SMS choices -->
+                <div class="sms-sample-item" onclick="selectSMS(this)">Rs. 850 debited via UPI to DMART</div>
+                <div class="sms-sample-item" onclick="selectSMS(this)">Rs 500.00 debited from A/C ...1234 on 09-07-26 to VPA zomato@paytm (Ref No 992211)</div>
+                <div class="sms-sample-item" onclick="selectSMS(this)">Txn of Rs. 150.00 on Credit Card XX7890 at STARBUCKS on 09/07/26 14:30. Limit Avbl: Rs. 45000</div>
+                <div class="sms-sample-item" onclick="selectSMS(this)">Alert: Rs.450.00 debited from SBI Account ...4321 via UPI to SWIGGY Ref 12345</div>
+                <div class="sms-sample-item" onclick="selectSMS(this)">Your A/C XX4321 has been debited with INR 2,400.00 via NetBanking on 09-07-26 by Utility Bill</div>
+                <div class="sms-sample-item" onclick="selectSMS(this)">Dear SBI User, Txn of INR 5,000.00 via UPI Ref 678901 to AMAZON on 09Jul26</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">SMS Sender Address</label>
+                <input type="text" id="sim-sms-sender" class="form-control" value="AD-HDFCBK" style="font-size: 11px; padding: 6px 10px;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">SMS Body</label>
+                <textarea id="sim-sms-text" class="form-control" style="font-size: 11px; height: 60px;"></textarea>
+            </div>
+            <button class="btn-control" onclick="simulateSMSArrival()">
+                <i class="fas fa-paper-plane"></i> Send Mock SMS to Phone
+            </button>
+        </div>
+
+        <!-- Receipt OCR Mock trigger -->
+        <div class="control-section">
+            <div class="control-section-title">
+                <i class="fas fa-camera"></i> Receipt OCR Scanner Mock
+            </div>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+                Simulates taking a photo of a receipt. Extracted text will be sent to the AI Categorizer.
+            </p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn-control" style="margin-top:0;" onclick="triggerMockOCR('starbucks')">Starbucks Bills</button>
+                <button class="btn-control" style="margin-top:0;" onclick="triggerMockOCR('pharmacy')">Apollo Pharmacy</button>
+            </div>
+        </div>
+
+        <!-- Developer Logger Console -->
+        <div class="control-section">
+            <div class="control-section-title">
+                <i class="fas fa-terminal"></i> Backend Debug Logger
+            </div>
+            <div class="console-logs" id="console-logger">
+                <div class="console-log-entry">[System] Debug logger initialized. Running offline fallback modules by default. Enter Gemini API key in Settings to test LLM mode.</div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- JS Controller Logic -->
+<script>
+    // Variables for current state
+    let activeScreen = "dashboard";
+    let pendingTransaction = null;
+    let categoryChart = null;
+    let paymentChart = null;
+    let trendChart = null;
+    let currentCurrency = "₹";
+
+    // Initialize clock
+    function updateClock() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('phone-clock').innerText = `${hrs}:${mins}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Logger
+    function logMessage(sender, msg) {
+        const logger = document.getElementById("console-logger");
+        const entry = document.createElement("div");
+        entry.className = "console-log-entry";
+        const now = new Date().toLocaleTimeString();
+        entry.innerText = `[${now}] [${sender}] ${msg}`;
+        logger.appendChild(entry);
+        logger.scrollTop = logger.scrollHeight;
+    }
+
+    // Toggle Light/Dark Theme
+    function toggleTheme() {
+        const htmlNode = document.documentElement;
+        const currentTheme = htmlNode.getAttribute("data-theme") || "dark";
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        htmlNode.setAttribute("data-theme", newTheme);
+        logMessage("UI", `Switched UI theme to ${newTheme.toUpperCase()}`);
+    }
+
+    // Nav Switcher
+    function showScreen(screenId) {
+        // Hide all screens
+        document.querySelectorAll(".screen-content").forEach(s => s.classList.remove("active"));
+        document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+        
+        // Show selected screen
+        const targetScreen = document.getElementById(`screen-${screenId}`);
+        if(targetScreen) targetScreen.classList.add("active");
+        
+        // Highlight active nav tab
+        const navMap = {
+            'dashboard': 'home',
+            'reports': 'reports',
+            'search': 'search',
+            'insights': 'insights',
+            'settings': 'settings'
+        };
+        const navId = navMap[screenId];
+        if(navId) {
+            const navNode = document.getElementById(`nav-${navId}`);
+            if (navNode) navNode.classList.add("active");
+        }
+
+        // Set screen badge
+        document.getElementById("screen-badge").innerText = screenId.toUpperCase();
+        activeScreen = screenId;
+
+        // Perform updates on specific pages
+        if(screenId === 'dashboard') {
+            refreshDashboard();
+        } else if (screenId === 'reports') {
+            loadReports();
+        } else if (screenId === 'insights') {
+            loadInsights();
+        } else if (screenId === 'budgets-manager') {
+            loadBudgetEditor();
+        }
+    }
+
+    // SMS selection from samples panel
+    function selectSMS(node) {
+        document.getElementById("sim-sms-text").value = node.innerText;
+    }
+    // Select first sample by default
+    selectSMS(document.querySelector(".sms-sample-item"));
+
+    // --- API WRAPPERS ---
+
+    // 1. Simulate SMS arrival
+    async function simulateSMSArrival() {
+        const smsText = document.getElementById("sim-sms-text").value;
+        const sender = document.getElementById("sim-sms-sender").value;
+        
+        logMessage("SMS Simulator", `Sent SMS to parser: "${smsText}"`);
+        
+        try {
+            const response = await fetch("/api/sms/parse", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({sms_text: smsText, sender: sender})
+            });
+            const details = await response.json();
+            
+            logMessage("API Parser", `Returned details: ${JSON.stringify(details)}`);
+            
+            // Set pending transaction data
+            pendingTransaction = {
+                amount: details.amount,
+                merchant: details.merchant || "Unknown Merchant",
+                payment_mode: details.payment_mode || "UPI",
+                bank: details.bank || "Unknown Bank",
+                date: details.date,
+                time: details.time,
+                sms_source: details.sms_source
+            };
+
+            // Trigger Popdown banner on simulated phone screen
+            const banner = document.getElementById("sms-popdown");
+            document.getElementById("notif-bank").innerText = (details.bank || "SMS ALERT").toUpperCase();
+            document.getElementById("notif-title").innerText = `${currentCurrency}${details.amount} spent at ${details.merchant}`;
+            banner.classList.add("active");
+            
+            logMessage("Notification", `Fired push notification banner on phone.`);
+
+        } catch (e) {
+            logMessage("API Error", `Failed to parse SMS: ${e}`);
+        }
+    }
+
+    // Notification action handler
+    function handleNotifAction(action) {
+        document.getElementById("sms-popdown").classList.remove("active");
+        if(action === 'add') {
+            // Open entry screen, prefill it
+            showScreen('entry');
+            document.getElementById("entry-form-title").innerText = "Add Transaction Details";
+            document.getElementById("form-merchant").value = pendingTransaction.merchant;
+            document.getElementById("form-amount").value = pendingTransaction.amount;
+            document.getElementById("form-payment").value = pendingTransaction.payment_mode;
+            document.getElementById("form-bank").value = pendingTransaction.bank;
+            document.getElementById("form-date").value = pendingTransaction.date;
+            document.getElementById("form-items").value = "";
+            document.getElementById("form-items").focus();
+            logMessage("UI", "Loaded SMS transaction info into Details Form.");
+        } else {
+            // Skip - directly save without items (auto categorized to Miscellaneous)
+            logMessage("UI", "User skipped adding items. Saving transaction as Miscellaneous.");
+            saveTransactionDirectly();
+        }
+    }
+
+    // Directly save transaction if user clicks 'Skip'
+    async function saveTransactionDirectly() {
+        if (!pendingTransaction) return;
+        const payload = {
+            ...pendingTransaction,
+            items: [{
+                item_name: "Uncategorized Item",
+                category: "Miscellaneous",
+                subcategory: "General",
+                estimated_price: pendingTransaction.amount,
+                quantity: 1,
+                notes: "Auto-saved transaction with no details specified"
+            }]
+        };
+        
+        try {
+            const res = await fetch("/api/transactions", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            logMessage("API Database", `Saved transaction successfully (ID: ${data.transaction_id}).`);
+            pendingTransaction = null;
+            refreshDashboard();
+        } catch(e) {
+            logMessage("API Error", `Failed to direct save transaction: ${e}`);
+        }
+    }
+
+    // Submit Transaction details with items
+    async function submitTransaction() {
+        const merchant = document.getElementById("form-merchant").value || "Unknown Merchant";
+        const amount = parseFloat(document.getElementById("form-amount").value) || 0.0;
+        const payment = document.getElementById("form-payment").value;
+        const bank = document.getElementById("form-bank").value || "Cash";
+        const date = document.getElementById("form-date").value || new Date().toISOString().split('T')[0];
+        const itemsText = document.getElementById("form-items").value;
+
+        let parsedItems = [];
+        logMessage("AI service", `Requesting AI categorization for: "${itemsText.replace(/\n/g, ', ')}"`);
+
+        // Get AI categorization first
+        if (itemsText.trim()) {
+            try {
+                const catRes = await fetch("/api/categorize", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({items_text: itemsText})
+                });
+                const catData = await catRes.json();
+                logMessage("AI service", `Response: ${JSON.stringify(catData)}`);
+                parsedItems = catData.items.map(item => ({
+                    item_name: item.item_name,
+                    category: item.category,
+                    subcategory: item.subcategory,
+                    estimated_price: item.estimated_price,
+                    quantity: item.quantity,
+                    notes: ""
+                }));
+            } catch (e) {
+                logMessage("AI Error", `Failed to call AI categorizer: ${e}. Using general category.`);
+                parsedItems = [{
+                    item_name: "General Items",
+                    category: "Miscellaneous",
+                    subcategory: "General",
+                    estimated_price: amount,
+                    quantity: 1
+                }];
+            }
+        } else {
+            // Default item if text box is empty
+            parsedItems = [{
+                item_name: "General Purchase",
+                category: "Miscellaneous",
+                subcategory: "General",
+                estimated_price: amount,
+                quantity: 1
+            }];
+        }
+
+        const payload = {
+            amount: amount,
+            merchant: merchant,
+            payment_mode: payment,
+            bank: bank,
+            date: date,
+            time: new Date().toLocaleTimeString('en-US', {hour12:false}).slice(0,5),
+            sms_source: pendingTransaction ? pendingTransaction.sms_source : "Manual",
+            items: parsedItems
+        };
+
+        try {
+            const res = await fetch("/api/transactions", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            logMessage("API Database", `Saved expense successfully (ID: ${result.transaction_id}).`);
+            
+            // Clear inputs
+            document.getElementById("form-merchant").value = "";
+            document.getElementById("form-amount").value = "";
+            document.getElementById("form-items").value = "";
+            
+            pendingTransaction = null;
+            
+            // Redirect to home
+            showScreen('dashboard');
+        } catch (e) {
+            logMessage("API Error", `Failed to save transaction: ${e}`);
+        }
+    }
+
+    // Refresh Dashboard (load sums, budgets, transaction listings)
+    async function refreshDashboard() {
+        try {
+            // 1. Get stats
+            const statsRes = await fetch("/api/insights");
+            const data = await statsRes.json();
+            
+            document.getElementById("dash-month-total").innerText = `${currentCurrency}${data.dashboard_stats.month_spending.toFixed(0)}`;
+            document.getElementById("dash-today-total").innerText = `${currentCurrency}${data.dashboard_stats.today_spending.toFixed(0)}`;
+            document.getElementById("dash-week-total").innerText = `${currentCurrency}${data.dashboard_stats.week_spending.toFixed(0)}`;
+            
+            // 2. Load Budgets
+            const budgetsRes = await fetch("/api/budgets");
+            const budgets = await budgetsRes.json();
+            
+            const budgetsContainer = document.getElementById("dash-budgets");
+            budgetsContainer.innerHTML = "";
+            
+            // Filter budgets to show only top active categories to avoid cluttering dashboard
+            budgets.slice(0, 3).forEach(b => {
+                const pct = b.amount_limit > 0 ? (b.spent_amount / b.amount_limit) * 100 : 0;
+                let progressClass = "";
+                if(pct >= 100) progressClass = "danger";
+                else if (pct >= 75) progressClass = "warning";
+                
+                budgetsContainer.innerHTML += `
+                    <div class="budget-item">
+                        <div class="budget-info">
+                            <span>${b.category}</span>
+                            <span>${currentCurrency}${b.spent_amount.toFixed(0)} / ${currentCurrency}${b.amount_limit.toFixed(0)}</span>
+                        </div>
+                        <div class="budget-progress-bar">
+                            <div class="budget-progress ${progressClass}" style="width: ${Math.min(pct, 100)}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // 3. Load Recent transactions
+            const txRes = await fetch("/api/transactions");
+            const txList = await txRes.json();
+            
+            const txContainer = document.getElementById("dash-transactions");
+            txContainer.innerHTML = "";
+            
+            if(txList.length === 0) {
+                txContainer.innerHTML = `<div style="text-align:center; padding:20px; font-size:12px; color:var(--text-muted)">No transactions recorded. Use SMS Simulator or Floating button to add!</div>`;
+                return;
+            }
+            
+            txList.slice(0, 6).forEach(tx => {
+                let iconClass = "fa-shopping-cart";
+                let firstItemCategory = tx.items && tx.items.length > 0 ? tx.items[0].category : "Miscellaneous";
+                
+                // Map category to icon
+                const iconMap = {
+                    "Groceries": "fa-basket-shopping",
+                    "Nutrition": "fa-apple-whole",
+                    "Medical": "fa-briefcase-medical",
+                    "Shopping": "fa-bag-shopping",
+                    "Travel": "fa-plane-departure",
+                    "Fuel": "fa-gas-pump",
+                    "Entertainment": "fa-film",
+                    "Rent": "fa-house-user",
+                    "Utilities": "fa-bolt",
+                    "Bills": "fa-receipt",
+                    "Dining": "fa-utensils",
+                    "Coffee": "fa-mug-hot",
+                    "Electronics": "fa-laptop",
+                    "sent money to friend": "fa-user-group",
+                    "sent money to family": "fa-house-chimney"
+                };
+                iconClass = iconMap[firstItemCategory] || "fa-cart-shopping";
+                
+                txContainer.innerHTML += `
+                    <div class="expense-item-row">
+                        <div class="expense-item-left">
+                            <div class="expense-icon">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div class="expense-details">
+                                <span class="expense-merchant">${tx.merchant}</span>
+                                <span class="expense-sub">${tx.payment_mode} • ${tx.date}</span>
+                            </div>
+                        </div>
+                        <div class="expense-item-right">
+                            <span class="expense-amount">${currentCurrency}${tx.amount.toFixed(0)}</span>
+                            <span class="expense-delete" onclick="deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+        } catch (e) {
+            logMessage("API Error", `Dashboard reload failed: ${e}`);
+        }
+    }
+
+    // Delete transaction
+    async function deleteTransaction(id) {
+        if(!confirm("Are you sure you want to delete this transaction?")) return;
+        try {
+            await fetch(`/api/transactions/${id}`, {method: "DELETE"});
+            logMessage("API Database", `Deleted transaction ID: ${id}`);
+            refreshDashboard();
+        } catch (e) {
+            logMessage("API Error", `Deletion failed: ${e}`);
+        }
+    }
+
+    // --- REPORTS RENDER (CHART.JS) ---
+    async function loadReports() {
+        try {
+            const res = await fetch("/api/reports");
+            const data = await res.json();
+            
+            // 1. Category shares
+            const catLabels = data.category_shares.map(item => item.category);
+            const catValues = data.category_shares.map(item => item.spent);
+            
+            if(categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(document.getElementById('categoryChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{
+                        data: catValues,
+                        backgroundColor: ['#10b981', '#34d399', '#60a5fa', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6b7280', '#06b6d4', '#14b8a6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 9 } } }
+                    }
+                }
+            });
+
+            // 2. Payment shares
+            const payLabels = data.payment_shares.map(item => item.payment_mode);
+            const payValues = data.payment_shares.map(item => item.spent);
+            
+            if(paymentChart) paymentChart.destroy();
+            paymentChart = new Chart(document.getElementById('paymentChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: payLabels,
+                    datasets: [{
+                        data: payValues,
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 3. Trend Chart
+            const trendLabels = data.monthly_trend.map(item => item.month);
+            const trendValues = data.monthly_trend.map(item => item.spent);
+            
+            if(trendChart) trendChart.destroy();
+            trendChart = new Chart(document.getElementById('trendChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        data: trendValues,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            
+            logMessage("Charts", "Successfully loaded reports visualization datasets.");
+        } catch (e) {
+            logMessage("API Error", `Reports failed to load: ${e}`);
+        }
+    }
+
+    // --- SEARCH PAGE ---
+    function handleSearchKeyPress(event) {
+        if(event.key === 'Enter') executeSearch();
+    }
+    
+    async function executeSearch() {
+        const query = document.getElementById("search-input").value;
+        if (!query.trim()) return;
+        
+        logMessage("Search Client", `Requested NLP query: "${query}"`);
+        const resBox = document.getElementById("search-results-list");
+        resBox.innerHTML = `<div style="text-align:center; padding:40px 0;"><i class="fas fa-spinner fa-spin" style="font-size:24px; color:var(--emerald-500)"></i></div>`;
+        
+        try {
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            logMessage("Search Client", `Search matches returned: ${data.length} transactions`);
+            
+            resBox.innerHTML = "";
+            if (data.length === 0) {
+                resBox.innerHTML = `<div style="text-align:center; padding:40px 0; color:var(--text-muted); font-size:12px;">No matches found for this query.</div>`;
+                return;
+            }
+            
+            data.forEach(tx => {
+                resBox.innerHTML += `
+                    <div class="expense-item-row">
+                        <div class="expense-item-left">
+                            <div class="expense-icon">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <div class="expense-details">
+                                <span class="expense-merchant">${tx.merchant}</span>
+                                <span class="expense-sub">${tx.payment_mode} • ${tx.date}</span>
+                            </div>
+                        </div>
+                        <div class="expense-item-right">
+                            <span class="expense-amount">${currentCurrency}${tx.amount.toFixed(0)}</span>
+                            <span class="expense-delete" onclick="deleteTransaction(${tx.id})"><i class="fas fa-trash"></i></span>
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (e) {
+            logMessage("API Error", `Search execution failed: ${e}`);
+        }
+    }
+
+    // --- INSIGHTS PAGE ---
+    async function loadInsights() {
+        try {
+            const res = await fetch("/api/insights");
+            const data = await res.json();
+            
+            // Load text observations
+            const insightBox = document.getElementById("insights-list-box");
+            insightBox.innerHTML = "";
+            
+            data.insights.forEach(ins => {
+                insightBox.innerHTML += `
+                    <div class="insight-card">
+                        <i class="fas fa-lightbulb insight-icon"></i>
+                        <div>${ins}</div>
+                    </div>
+                `;
+            });
+            
+            // Load general stats
+            const statsBox = document.getElementById("stats-list-box");
+            statsBox.innerHTML = "";
+            
+            const stats = [
+                {label: "Most Purchased Item", val: data.statistics.most_purchased_item},
+                {label: "Most Visited Merchant", val: data.statistics.most_visited_merchant},
+                {label: "Average Daily Spend", val: `${currentCurrency}${data.statistics.avg_daily_spend.toFixed(0)}`},
+                {label: "Average Weekly Spend", val: `${currentCurrency}${data.statistics.avg_weekly_spend.toFixed(0)}`},
+                {label: "Highest Spending Day", val: data.statistics.highest_spending_day},
+                {label: "Est. Monthly Savings", val: `${currentCurrency}${data.statistics.monthly_savings_estimate.toFixed(0)}`}
+            ];
+            
+            stats.forEach(s => {
+                statsBox.innerHTML += `
+                    <div class="budget-item">
+                        <div class="budget-info" style="margin-bottom:0;">
+                            <span style="color:var(--text-muted)">${s.label}</span>
+                            <span style="color:var(--emerald-500); font-weight:700;">${s.val}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            logMessage("AI Insights", "Refreshed spending observations and statistics cards.");
+        } catch (e) {
+            logMessage("API Error", `Insights loading failed: ${e}`);
+        }
+    }
+
+    // --- BUDGET EDITOR PAGE ---
+    async function loadBudgetEditor() {
+        try {
+            const res = await fetch("/api/budgets");
+            const budgets = await res.json();
+            
+            const editList = document.getElementById("budget-edit-list");
+            editList.innerHTML = "";
+            
+            budgets.forEach(b => {
+                editList.innerHTML += `
+                    <div class="form-group" style="display:grid; grid-template-columns: 1fr 100px; gap:10px; align-items:center;">
+                        <span style="font-size:12px; font-weight:600;">${b.category}</span>
+                        <input type="number" class="form-control" style="padding:6px 10px; text-align:right;" value="${b.amount_limit}" onchange="saveBudgetLimit('${b.category}', this.value)">
+                    </div>
+                `;
+            });
+        } catch (e) {
+            logMessage("API Error", `Failed to load budgets: ${e}`);
+        }
+    }
+
+    async function saveBudgetLimit(category, limit) {
+        try {
+            await fetch("/api/budgets", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({category: category, amount_limit: parseFloat(limit) || 0})
+            });
+            logMessage("API Database", `Updated ${category} budget limit to ${currentCurrency}${limit}`);
+        } catch (e) {
+            logMessage("API Error", `Failed to save budget limit: ${e}`);
+        }
+    }
+
+    // --- SETTINGS CONTROLLER ---
+    async function loadSettings() {
+        try {
+            const res = await fetch("/api/settings");
+            const data = await res.json();
+            
+            document.getElementById("sett-currency").value = data.currency || "₹";
+            currentCurrency = data.currency || "₹";
+            document.getElementById("sett-api-key").value = data.gemini_api_key || "";
+            document.getElementById("sett-ocr").checked = data.ocr_mock_enabled === "true";
+        } catch (e) {
+            logMessage("API Error", `Settings loading failed: ${e}`);
+        }
+    }
+
+    async function updateSetting(key, val) {
+        try {
+            await fetch("/api/settings", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({key: key, value: val})
+            });
+            logMessage("Settings", `Updated settings configuration [${key}] = "${val}"`);
+            
+            if(key === 'currency') {
+                currentCurrency = val;
+                refreshDashboard();
+            }
+        } catch (e) {
+            logMessage("API Error", `Settings update failed: ${e}`);
+        }
+    }
+
+    function exportData() {
+        window.open("/api/export", "_blank");
+        logMessage("Export Client", "Exported database transactions to CSV file.");
+    }
+
+    // --- RECEIPT OCR SIMULATOR ---
+    async function triggerMockOCR(receiptType) {
+        logMessage("Camera Scanner", `Simulating receipt upload: ${receiptType.toUpperCase()}`);
+        let receiptText = "";
+        let merchant = "";
+        let amount = 0;
+        
+        if (receiptType === 'starbucks') {
+            merchant = "STARBUCKS COFFEE";
+            amount = 350.00;
+            receiptText = "2x Caffe Latte - Rs 240\n1x Chocolate Cookie - Rs 110";
+        } else {
+            merchant = "APOLLO PHARMACY";
+            amount = 1200.00;
+            receiptText = "1x Paracetamol Tablets - Rs 80\n2x Multivitamins - Rs 920\n1x Cough Syrup - Rs 200";
+        }
+
+        // Pre-fill fields on expense entry screen and direct navigation
+        showScreen('entry');
+        document.getElementById("entry-form-title").innerText = "Extracted Receipt (OCR)";
+        document.getElementById("form-merchant").value = merchant;
+        document.getElementById("form-amount").value = amount;
+        document.getElementById("form-payment").value = "Card";
+        document.getElementById("form-bank").value = "HDFC Card";
+        document.getElementById("form-items").value = receiptText;
+        document.getElementById("form-items").focus();
+        
+        logMessage("Camera Scanner", "OCR extraction complete. Loaded items and price to form.");
+    }
+
+    // Bootstrapping
+    window.onload = function() {
+        loadSettings();
+        refreshDashboard();
+    };
+
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+name: expense_iq
+description: ExpenseIQ - AI Powered Personal Expense Tracker
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.5
+  provider: ^6.0.5
+  http: ^1.1.0
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  telephony: ^0.2.0
+  flutter_local_notifications: ^16.1.0
+  fl_chart: ^0.66.0
+  intl: ^0.18.1
+  shared_preferences: ^2.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.1
+
+flutter:
+  uses-material-design: true

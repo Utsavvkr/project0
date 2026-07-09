@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite
+*.sqlite3
+.env
+
+# Temporary / Build
+*.zip
+*.apk
+.gemini/
+.system_generated/
+flutter_windows.zip
+
+# Flutter / Dart
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/build/
+
+# Node
+node_modules/

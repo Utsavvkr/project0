@@ -1,0 +1,57 @@
+name: Build Android APK & Release
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+
+      - name: Install dependencies
+        working-directory: ./flutter_app
+        run: flutter pub get
+
+      - name: Build Android APK
+        working-directory: ./flutter_app
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExpenseIQ-Android-APK
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Copy APK with Clean Name
+        run: cp flutter_app/build/app/outputs/flutter-apk/app-release.apk ExpenseIQ.apk
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: ExpenseIQ Android APK (Latest)
+          body: |
+            ### 🚀 ExpenseIQ - AI Powered Personal Expense Tracker
+            Download **ExpenseIQ.apk** below and install it directly on your Android phone!
+          files: ExpenseIQ.apk
+          make_latest: true
